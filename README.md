@@ -14,29 +14,29 @@ Wow 3.3.5 Custom MAP - AzerothCore
   Modélisation du Terrain : Utilisez les outils de Noggit pour commencer à sculpter le terrain selon votre croquis.
   Ajoutez des montagnes, vallées, rivières, et autres caractéristiques géographiques.
 ## Étape 3 bis : copier les fichiers ADT existants
-### Étape 1 : Copier les fichiers ADT
-  Localiser les fichiers ADT : Les fichiers ADT se trouvent généralement dans le dossier World\Maps\MapName.
-  Copiez les fichiers ADT que vous souhaitez utiliser.
-  Renommer les fichiers ADT : Lorsque vous déplacez les fichiers ADT vers une nouvelle position, renommez-les en fonction de la nouvelle grille.
-  Par exemple, si vous déplacez un fichier ADT de (0,0) à (1,1), renommez-le en conséquence.
-
-### Étape 2 : Ajuster les objets
-  Utiliser un éditeur de fichiers ADT : Vous aurez besoin d'un outil comme Taliis ou Noggit pour éditer les fichiers ADT.
-  Ouvrez les fichiers ADT dans l'éditeur.
-  Repositionner les objets : Vérifiez les positions des objets dans les fichiers ADT déplacés.
-  Ajustez les positions pour qu'ils correspondent à la nouvelle grille.
-  Assurez-vous que les objets ne se chevauchent pas ou ne sont pas mal alignés.
-  Corriger les liens et les références : Les fichiers ADT contiennent des liens vers d'autres fichiers et objets (comme les WMO et M2).
-  Assurez-vous que tous les liens et références sont corrects pour la nouvelle position des fichiers ADT.
-### Étape 3 : Tester la carte
-  Importer les fichiers ADT : Importez les fichiers ADT modifiés dans votre client WoW 3.3.5.
-  Utilisez un éditeur comme MyWarcraftStudio pour vérifier que tout est en ordre.
-### Tester en jeu :
-  Lancez le client de jeu et vérifiez la carte pour détecter les bugs ou les erreurs.
-  Assurez-vous que tous les objets apparaissent correctement et que la carte se charge sans problèmes.
-### Debugging :
-  Si vous rencontrez des bugs, revenez à l'éditeur de fichiers ADT et corrigez les erreurs.
-  Testez à nouveau jusqu'à ce que la carte fonctionne correctement.
+  ### Étape 1 : Copier les fichiers ADT
+    Localiser les fichiers ADT : Les fichiers ADT se trouvent généralement dans le dossier World\Maps\MapName.
+    Copiez les fichiers ADT que vous souhaitez utiliser.
+    Renommer les fichiers ADT : Lorsque vous déplacez les fichiers ADT vers une nouvelle position, renommez-les en fonction de la nouvelle grille.
+    Par exemple, si vous déplacez un fichier ADT de (0,0) à (1,1), renommez-le en conséquence.
+  
+  ### Étape 2 : Ajuster les objets
+    Utiliser un éditeur de fichiers ADT : Vous aurez besoin d'un outil comme Taliis ou Noggit pour éditer les fichiers ADT.
+    Ouvrez les fichiers ADT dans l'éditeur.
+    Repositionner les objets : Vérifiez les positions des objets dans les fichiers ADT déplacés.
+    Ajustez les positions pour qu'ils correspondent à la nouvelle grille.
+    Assurez-vous que les objets ne se chevauchent pas ou ne sont pas mal alignés.
+    Corriger les liens et les références : Les fichiers ADT contiennent des liens vers d'autres fichiers et objets (comme les WMO et M2).
+    Assurez-vous que tous les liens et références sont corrects pour la nouvelle position des fichiers ADT.
+  ### Étape 3 : Tester la carte
+    Importer les fichiers ADT : Importez les fichiers ADT modifiés dans votre client WoW 3.3.5.
+    Utilisez un éditeur comme MyWarcraftStudio pour vérifier que tout est en ordre.
+  ### Tester en jeu :
+    Lancez le client de jeu et vérifiez la carte pour détecter les bugs ou les erreurs.
+    Assurez-vous que tous les objets apparaissent correctement et que la carte se charge sans problèmes.
+  ### Debugging :
+    Si vous rencontrez des bugs, revenez à l'éditeur de fichiers ADT et corrigez les erreurs.
+    Testez à nouveau jusqu'à ce que la carte fonctionne correctement.
 ## Étape 4 : Appliquer les Textures
   Peindre les Textures : Sélectionnez les textures appropriées pour les différents types de terrain (herbe, sable, roche, etc.).
   Appliquez les textures en utilisant les outils de peinture de Noggit.

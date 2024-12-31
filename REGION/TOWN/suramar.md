@@ -326,6 +326,40 @@ textures used: 110
 108: world/wmo/brokenisles/suramar/7sr_suramarraid_exterior_019_lod2.blp
 109: world/wmo/brokenisles/suramar/7sr_suramarraid_exterior_021_lod2.blp
 110: world/wmo/brokenisles/suramar/7sr_suramarraid_exterior_022_lod2.blp
+```
+#  7sr_citywillowtree_b01
+![image](https://github.com/user-attachments/assets/59176520-e248-4474-a48a-bcc82e717a34)
+
+```
+filename: world/expansion06/doodads/suramar/7sr_citywillowtree_b01.m2
+unique ID: 8460
+position X/Y/Z: {14024.2 , 135.708 , 16466.5}
+rotation X/Y/Z: {0 , 130.144 , 0}
+scale: 2.3291
+server position X/Y/Z: {600.199, 3042.45, 135.708}
+server orientation: 5.41304
+textures Used: 5
+size category: 191.121
+1: world/expansion06/doodads/suramar/7sr_willow_canopydome01.blp
+2: world/expansion06/doodads/suramar/7sr_willow_trunk01.blp
+3: world/expansion06/doodads/suramar/7sr_willow_canopydome02.blp
+4: world/expansion06/doodads/suramar/7sr_willow_canopy01.blp
+5: world/expansion06/doodads/suramar/7sr_willow_canopy_add.blp
+```
+#  7sr_woodlandtree_d01
+![Uploading image.png…]()
 
 
+```
+filename: world/expansion06/doodads/suramar/7sr_woodlandtree_d01.m2
+unique ID: 22799
+position X/Y/Z: {14336.2 , 53.8158 , 15950.7}
+rotation X/Y/Z: {-9.00358 , -19.5 , -13.9494}
+scale: 1.44922
+server position X/Y/Z: {1115.97, 2730.46, 53.8158}
+server orientation: 2.80125
+textures Used: 2
+size category: 290.453
+1: world/expansion06/doodads/suramar/7sr_woodlandtree_canopy01.blp
+2: world/expansion06/doodads/suramar/7sr_woodlandtree_trunk01.blp
 ```

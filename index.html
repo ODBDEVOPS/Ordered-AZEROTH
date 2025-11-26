@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azeroth Antique - Carte Interactive</title>
+    <title>Azeroth Antique - Carte Interactive Avancée</title>
     <style>
         /* --- RESET & BASE --- */
         :root {
             --wow-gold: #c69c6d;
             --wow-dark: #111111;
-            --wow-panel: rgba(20, 20, 20, 0.9);
+            --wow-panel: rgba(20, 20, 20, 0.95);
             --color-titan: #ffd700;
             --color-oldgod: #9b30ff;
             --color-nature: #32cd32;
@@ -24,10 +24,10 @@
             width: 100%;
             height: 100%;
             background-color: #000;
-            font-family: 'Times New Roman', serif; /* Style classique WoW */
-            overflow: hidden; /* Empêche le scroll natif */
+            font-family: 'Times New Roman', serif;
+            overflow: hidden;
             color: #fff;
-            user-select: none; /* Empêche la sélection de texte pendant le drag */
+            user-select: none;
         }
 
         /* --- VIEWPORT & MAP --- */
@@ -39,19 +39,22 @@
             cursor: grab;
         }
 
+        #viewport.user-dragging {
+            cursor: move !important;
+        }
+
         #viewport:active {
             cursor: grabbing;
         }
 
         #map-container {
-            /* Taille arbitraire de la carte virtuelle pour le calcul des % */
             width: 2000px; 
-            height: 1333px; /* Ratio approx 3:2 */
+            height: 1333px; 
             position: absolute;
             top: 0;
             left: 0;
-            transform-origin: 0 0; /* Transformation depuis le coin haut gauche pour simplifier les maths */
-            transition: transform 0.1s cubic-bezier(0.1, 0.57, 0.1, 1); /* Lissage léger si on utilise les boutons */
+            transform-origin: 0 0;
+            transition: transform 0.1s cubic-bezier(0.1, 0.57, 0.1, 1);
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
@@ -61,14 +64,34 @@
             position: absolute;
             top: 0;
             left: 0;
-            pointer-events: none; /* Les clics passent au travers vers le container */
+            pointer-events: none; 
+            transition: opacity 0.2s ease, display 0.2s ease;
         }
-
-        /* Images */
-        #layer-base { z-index: 1; }
-        #layer-overlay { z-index: 2; opacity: 0.5; transition: opacity 0.2s ease; }
+        
+        #user-layer-control {
+            z-index: 3;
+            opacity: 0;
+            transform-origin: 0 0;
+            transition: transform 0.1s linear, opacity 0.2s ease;
+            pointer-events: auto;
+        }
+        #layer-user {
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            pointer-events: auto; 
+            cursor: grab; /* Change le curseur en 'grab' pour indiquer le déplacement */
+        }
+        #user-layer-control:active #layer-user {
+            cursor: grabbing;
+        }
+        #layer-overlay { z-index: 2; opacity: 0.5; }
 
         /* --- MARKERS --- */
+        #markers-container {
+            z-index: 10;
+            pointer-events: none;
+        }
         .marker {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -76,8 +99,8 @@
             border: 2px solid rgba(255,255,255,0.8);
             cursor: pointer;
             z-index: 10;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
-            pointer-events: auto; /* Réactive les événements sur les marqueurs */
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+            pointer-events: auto; 
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
@@ -87,7 +110,6 @@
             box-shadow: 0 0 15px currentColor;
         }
 
-        /* Marker spécifique Puits d'éternité */
         .marker.large {
             width: 20px !important;
             height: 20px !important;
@@ -125,7 +147,7 @@
             visibility: visible;
         }
 
-        /* --- UI CONTROLS --- */
+        /* --- UI CONTROLS - RESTRUCTURATION MINIMALISTE --- */
         #ui-controls {
             position: fixed;
             bottom: 20px;
@@ -134,13 +156,35 @@
             background-color: var(--wow-panel);
             border: 2px solid var(--wow-gold);
             border-radius: 8px;
-            padding: 10px 20px;
+            padding: 10px;
             display: flex;
-            align-items: center;
+            flex-wrap: wrap; 
+            justify-content: center;
             gap: 20px;
             z-index: 1000;
             box-shadow: 0 5px 15px rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
+        }
+
+        .control-section {
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 180px;
+        }
+
+        .control-section h3 {
+            color: var(--wow-gold);
+            font-size: 14px;
+            text-transform: uppercase;
+            margin: 0 0 5px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+            text-align: center;
         }
 
         .control-group {
@@ -150,20 +194,75 @@
             gap: 5px;
         }
 
-        label {
+        .control-group-row {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Style pour le bouton d'importation relooké */
+        .btn-action {
+            background: #333;
+            border: 1px solid #777;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
             font-size: 12px;
             text-transform: uppercase;
-            color: #aaa;
-            letter-spacing: 1px;
+            transition: background 0.2s;
+            letter-spacing: normal; 
+            align-self: stretch;
+            text-align: center;
+        }
+        .btn-action:hover { background: #555; }
+
+        /* Groupement des inputs Scale (Slider + Number) */
+        .input-duo {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
         }
 
-        /* Slider Customization */
+        /* Styles pour les filtres en grille */
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 10px;
+            width: 100%;
+        }
+        .filters-grid .legend-item {
+            justify-content: flex-start;
+        }
+        .control-group-inline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        /* Personnalisation des Inputs Number */
+        input[type=number] {
+            width: 50px; /* Plus large pour les valeurs décimales */
+            padding: 3px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: white;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 11px;
+            -moz-appearance: textfield;
+        }
+        
+        /* Personnalisation du Slider */
         input[type=range] {
             -webkit-appearance: none;
-            width: 150px;
+            width: 70px; /* Plus court pour le duo */
             background: transparent;
         }
-
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 16px;
@@ -174,15 +273,14 @@
             margin-top: -6px;
             box-shadow: 0 0 5px #000;
         }
-
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
             background: #444;
             border-radius: 2px;
         }
-
-        /* Zoom Buttons */
+        
+        /* Zoom Buttons & Toggles (inchangés mais intégrés) */
         .btn-zoom {
             background: #222;
             border: 1px solid var(--wow-gold);
@@ -194,113 +292,119 @@
             font-weight: bold;
             font-size: 16px;
             transition: background 0.2s;
+            line-height: 30px;
+            text-align: center;
         }
         .btn-zoom:hover { background: #444; }
 
-        /* Legend */
-        .legend {
-            display: flex;
-            gap: 10px;
-            font-size: 10px;
-            margin-left: 10px;
-            border-left: 1px solid #555;
-            padding-left: 15px;
+        #coord-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            z-index: 2000;
+            pointer-events: none;
+            box-shadow: 0 0 10px #00ff00;
         }
-        .legend-item { display: flex; align-items: center; gap: 4px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; }
-/* --- DEV MODE / COORDONNÉES --- */
-#coord-display {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid #00ff00;
-    color: #00ff00; /* Vert terminal style matrix */
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    z-index: 2000;
-    pointer-events: none; /* Pour ne pas bloquer la souris */
-    box-shadow: 0 0 10px #00ff00;
-}
-
-/* Curseur réticule pour la précision quand le mode est actif */
-.crosshair-cursor {
-    cursor: crosshair !important;
-}
-
-/* Style du Switch Toggle (Optionnel, pour faire joli) */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 20px;
-}
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #333;
-    transition: .4s;
-    border-radius: 20px;
-    border: 1px solid #555;
-}
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 2px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-input:checked + .slider { background-color: var(--wow-gold); }
-input:checked + .slider:before { transform: translateX(18px); }
     </style>
 </head>
 <body>
-<div id="coord-display" style="display:none;">X: 0% Y: 0%</div>
+<div id="coord-display" style="display:none;">TOP: 0% <br> LEFT: 0%</div>
     <div id="viewport">
         <div id="map-container">
             <img id="layer-base" class="map-layer" src="1200px-Ordered_Azeroth.jpg" alt="Base Map">
             
             <img id="layer-overlay" class="map-layer" src="WoWChronicleSample-12.jpg" alt="Overlay Map">
             
+            <div id="user-layer-control" class="map-layer" style="z-index: 3; opacity: 0;">
+                <img id="layer-user" src="" alt="User Overlay Map" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
             <div id="markers-container"></div>
         </div>
     </div>
 
     <div id="ui-controls">
         
-        <div class="control-group">
+        <div class="control-section" id="section-core">
+            <h3>Carte Globale</h3>
+            
+            <div id="layer-toggles" class="control-group-row">
+                <label>Visibilité</label>
+                <div style="display: flex; gap: 8px;">
+                    <label for="base-toggle" style="font-size: 11px;">Base</label>
+                    <input type="checkbox" id="base-toggle" checked>
+                    <label for="overlay-toggle" style="font-size: 11px;">Chronique</label>
+                    <input type="checkbox" id="overlay-toggle" checked>
+                    <label for="user-toggle" style="font-size: 11px;">User</label>
+                    <input type="checkbox" id="user-toggle">
+                </div>
+            </div>
 
-            <label>Politique</label>
-            <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="0.5">
-        </div>
-
-        <div class="control-group">
-            <label>Zoom</label>
-            <div style="display: flex; gap: 5px;">
-                <button class="btn-zoom" id="zoom-out">-</button>
-                <button class="btn-zoom" id="zoom-in">+</button>
+            <div class="control-group">
+                <label>Opacité Chronique</label>
+                <input type="range" id="overlay-opacity-slider" min="0" max="1" step="0.01" value="0.5">
+            </div>
+            
+            <div class="control-group control-group-row">
+                <label>Zoom Global</label>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn-zoom" id="zoom-out">-</button>
+                    <button class="btn-zoom" id="zoom-in">+</button>
+                </div>
             </div>
         </div>
-	<div class="control-group">
-    	    <label>Dev Mode</label>
-    	    <label class="switch">
-            <input type="checkbox" id="dev-toggle">
-            <span class="slider"></span>
-            </label>
+
+        <div class="control-section" id="section-user-layer">
+            <h3>Calque Utilisateur</h3>
+            
+            <div class="control-group">
+                <label for="file-upload" class="btn-action">Importer Image</label>
+                <input type="file" id="file-upload" accept="image/*" style="display: none;">
+            </div>
+            
+            <div class="control-group">
+                <label>Opacité</label>
+                <input type="range" id="user-opacity-slider" min="0" max="1" step="0.01" value="1">
+            </div>
+
+            <div class="control-group">
+                <label>Scale</label>
+                <div class="input-duo">
+                    <input type="range" id="user-scale-slider" min="0.1" max="5" step="0.01" value="1">
+                    <input type="number" id="user-scale-number" value="1.00" min="0.1" max="5" step="0.01">
+                </div>
+            </div>
+
+            <div class="control-group control-group-row">
+                <div class="control-group-inline">
+                    <label>Pos X (%)</label>
+                    <input type="number" id="user-pos-x" value="0" min="-100" max="100" step="1">
+                </div>
+                <div class="control-group-inline">
+                    <label>Pos Y (%)</label>
+                    <input type="number" id="user-pos-y" value="0" min="-100" max="100" step="1">
+                </div>
+            </div>
         </div>
-        <div class="legend">
-            <div class="legend-item"><span class="dot" style="background:var(--color-titan)"></span>Titan</div>
-            <div class="legend-item"><span class="dot" style="background:var(--color-oldgod)"></span>DTA/Vide</div>
-            <div class="legend-item"><span class="dot" style="background:var(--color-troll)"></span>Troll</div>
-            <div class="legend-item"><span class="dot" style="background:var(--color-aqir)"></span>Aqir</div>
+        
+        <div class="control-section" id="section-filters">
+            <h3>Filtres & Dev</h3>
+            <div class="control-group control-group-row" style="justify-content: space-around;">
+                <label>Dev Mode (Double-clic pour copier)</label>
+                <label class="switch">
+                    <input type="checkbox" id="dev-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div id="location-filters" class="filters-grid">
+                </div>
         </div>
     </div>
 
@@ -312,55 +416,42 @@ input:checked + .slider:before { transform: translateX(18px); }
             zoomSpeed: 0.1
         };
 
-        // Données des lieux
         const locations = [
-// Ajoute TEST Thelsamar
-{ name: "Kargath", top: 59.8, left: 73.7, type: "well" },
-{ name: "Thelsamar", top: 51.9, left: 75.9, type: "well" },
-
-{ name: "Ironforge", top: 50.2, left: 67.4, type: "aliance" },
-{ name: "Kharanos", top: 54.2, left: 66.8, type: "aliance" },
-
-
-{ name: "Thorium Point", top: 59.3, left: 68.7, type: "well" },
-{ name: "Dustfire Valley Point", top: 59.3, left: 70.3, type: "valley" },
-
-
-
-            // Centre
+            { name: "Kargath", top: 59.8, left: 73.7, type: "troll" },
+            { name: "Thelsamar", top: 51.9, left: 75.9, type: "troll" },
+            { name: "Ironforge", top: 50.2, left: 67.4, type: "aliance" },
+            { name: "Kharanos", top: 54.2, left: 66.8, type: "aliance" },
+            { name: "Thorium Point", top: 59.3, left: 68.7, type: "well" },
+            { name: "Dustfire Valley Point", top: 59.3, left: 70.3, type: "valley" },
             { name: "Puits d'Éternité", top: 48, left: 47, type: "well" },
-            
-            // Nord
             { name: "Ulduar", top: 12, left: 48, type: "titan" },
             { name: "Temple du Repos du Ver", top: 20, left: 46, type: "titan" },
             { name: "Gundrak", top: 17, left: 52, type: "troll" },
             { name: "Azjol-Nerub", top: 21.4, left: 42.9, type: "aqir" },
-            
-            // Ouest
             { name: "Mont Hyjal", top: 34.6, left: 23.2, type: "nature" },
-            { name: "Ahn'Qiraj", top: 70.4, left: 20.2, type: "aqir" }, // Souvent associé C'Thun
-            { name: "C'Thun", top: 70.7, left: 20.7, type: "oldgod" },   // Ajout proche AQ
+            { name: "Ahn'Qiraj", top: 70.4, left: 20.2, type: "aqir" },
+            { name: "C'Thun", top: 70.7, left: 20.7, type: "oldgod" },
             { name: "Cratère d'Un'Goro", top: 64.6, left: 22.2, type: "nature" },
-            
-            // Sud
             { name: "Uldum", top: 73, left: 27.7, type: "titan" },
             { name: "Zul'Farrak", top: 62.9, left: 27.7, type: "troll" },
-            
-            // Est
             { name: "Uldaman", top: 58, left: 75, type: "titan" },
             { name: "Zul'Aman", top: 28, left: 79, type: "troll" },
-            
-            // Sud-Est / Pandarie Antique
             { name: "Zuldazar", top: 64, left: 45, type: "troll" },
             { name: "Zul'Gurub", top: 76, left: 71, type: "troll" },
             { name: "Val de l'Éternel Printemps", top: 80, left: 48, type: "nature" },
             { name: "Y'Shaarj (Cœur)", top: 81, left: 48, type: "oldgod" },
-            { name: "N'Zoth (Empire Noir)", top: 55, left: 61, type: "oldgod" }
+            { name: "N'Zoth (Empire Noir)", top: 55, left: 61, type: "oldgod" },
+	    { name: "The Dark Portal", top: 79.1, left: 74.3, type: "nature" },
+	    { name: "Stonard", top: 73.9, left: 74.4, type: "nature" },
+	    { name: "Nethergarde Keep", top: 74.8, left: 74.8, type: "aliance" },
+	    { name: "Darkshire", top: 73.8, left: 69.6, type: "aliance" },
+	    { name: "Rise of the defiler", top: 73.7, left: 73.7, type: "nature" },
+	    { name: "Misty Reed Strand", top: 72.4, left: 76.5, type: "nature" }
         ];
 
         const colors = {
             aliance: 'var(--color-titan)',
-            valley: 'var(--color-titan)',
+            valley: 'var(--color-nature)',
             titan: 'var(--color-titan)',
             oldgod: 'var(--color-oldgod)',
             nature: 'var(--color-nature)',
@@ -373,59 +464,190 @@ input:checked + .slider:before { transform: translateX(18px); }
         const mapContainer = document.getElementById('map-container');
         const viewport = document.getElementById('viewport');
         const markersContainer = document.getElementById('markers-container');
+        
+        const baseLayer = document.getElementById('layer-base');
         const overlayLayer = document.getElementById('layer-overlay');
-        const opacitySlider = document.getElementById('opacity-slider');
+        const userLayerControl = document.getElementById('user-layer-control');
+        const userLayer = document.getElementById('layer-user');
 
-        // Variables d'état pour le Pan/Zoom
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const devToggle = document.getElementById('dev-toggle');
+        
+        const fileUpload = document.getElementById('file-upload');
+        const overlayOpacitySlider = document.getElementById('overlay-opacity-slider');
+        const userOpacitySlider = document.getElementById('user-opacity-slider');
+        const baseToggle = document.getElementById('base-toggle');
+        const overlayToggle = document.getElementById('overlay-toggle');
+        const userToggle = document.getElementById('user-toggle');
+        
+        const userScaleSlider = document.getElementById('user-scale-slider');
+        const userScaleNumberInput = document.getElementById('user-scale-number'); // NOUVEAU
+        const userPosXInput = document.getElementById('user-pos-x');
+        const userPosYInput = document.getElementById('user-pos-y');
+        
+        const coordDisplay = document.getElementById('coord-display');
+
         let state = {
             scale: 1,
             panning: false,
-            pointX: 0,
-            pointY: 0,
             startX: 0,
             startY: 0,
-            cssX: 0, // Current Translate X
-            cssY: 0  // Current Translate Y
+            cssX: 0,
+            cssY: 0
+        };
+        
+        let userLayerState = {
+            scale: 1,
+            posX: 0,
+            posY: 0,
+            opacity: 1
         };
 
-        // Génération des marqueurs
-        locations.forEach(loc => {
-            const el = document.createElement('div');
-            el.className = `marker ${loc.type === 'well' ? 'large' : ''}`;
-            el.style.top = loc.top + '%';
-            el.style.left = loc.left + '%';
-            el.style.backgroundColor = colors[loc.type];
-            
-            // Taille standard ou large
-            const size = loc.type === 'well' ? 20 : 12;
-            if(loc.type !== 'well') {
-                el.style.width = size + 'px';
-                el.style.height = size + 'px';
-            }
+        let userLayerDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
 
-            // Tooltip
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.innerText = loc.name;
-            el.appendChild(tooltip);
+        /* --- FONCTIONS DE MISE À JOUR --- */
 
-            markersContainer.appendChild(el);
-        });
-
-        /* --- LOGIQUE OPACITÉ --- */
-        opacitySlider.addEventListener('input', (e) => {
-            overlayLayer.style.opacity = e.target.value;
-        });
-
-        /* --- LOGIQUE ZOOM & PAN --- */
-        
         const updateTransform = () => {
             mapContainer.style.transform = `translate(${state.cssX}px, ${state.cssY}px) scale(${state.scale})`;
         };
 
-        // 1. ZOOM (Mouse Wheel)
+        const updateUserLayerTransform = () => {
+            userLayerControl.style.transform = 
+                `translate(${userLayerState.posX}%, ${userLayerState.posY}%) scale(${userLayerState.scale})`;
+            
+            userLayerControl.style.opacity = userLayerState.opacity;
+            userPosXInput.value = userLayerState.posX.toFixed(0);
+            userPosYInput.value = userLayerState.posY.toFixed(0);
+        };
+
+
+        /* --- LOGIQUE CALQUES & UI --- */
+
+        // 1. Visibilité des Calques
+        baseToggle.addEventListener('change', (e) => {
+            baseLayer.style.display = e.target.checked ? 'block' : 'none';
+        });
+        overlayToggle.addEventListener('change', (e) => {
+            overlayLayer.style.display = e.target.checked ? 'block' : 'none';
+        });
+        userToggle.addEventListener('change', (e) => {
+            // Utilise l'opacité pour le toggle de visibilité du calque user
+            userLayerControl.style.opacity = e.target.checked ? userLayerState.opacity : 0;
+            // Met à jour la variable d'état si le calque n'était pas visible
+            if(e.target.checked) userLayerControl.style.opacity = userLayerState.opacity;
+        });
+
+        // 2. Opacité des Calques
+        overlayOpacitySlider.addEventListener('input', (e) => {
+            overlayLayer.style.opacity = e.target.value;
+        });
+        userOpacitySlider.addEventListener('input', (e) => {
+            userLayerState.opacity = parseFloat(e.target.value);
+            if(userToggle.checked) {
+                updateUserLayerTransform(); 
+            }
+        });
+
+        // 3. Chargement et Contrôles du Calque Utilisateur (Scale/Pos)
+        fileUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    userLayer.src = e.target.result;
+                    userLayerState.opacity = 1;
+                    userOpacitySlider.value = 1;
+                    userToggle.checked = true; // Active le toggle
+                    updateUserLayerTransform();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 4. Scale (Slider)
+        userScaleSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            userLayerState.scale = value;
+            userScaleNumberInput.value = value.toFixed(2); // Synchronisation du number
+            updateUserLayerTransform();
+        });
+
+        // 5. Scale (Number Input - NOUVEAU)
+        userScaleNumberInput.addEventListener('change', (e) => {
+            let value = parseFloat(e.target.value);
+            
+            // Borne la valeur entre min et max définis dans le HTML (0.1 et 5)
+            value = Math.min(Math.max(0.1, value), 5);
+            
+            userLayerState.scale = value;
+            userScaleSlider.value = value; // Synchronisation du slider
+            e.target.value = value.toFixed(2); // Affichage de 2 décimales
+            updateUserLayerTransform();
+        });
+
+        userPosXInput.addEventListener('input', (e) => {
+            userLayerState.posX = parseFloat(e.target.value);
+            updateUserLayerTransform();
+        });
+
+        userPosYInput.addEventListener('input', (e) => {
+            userLayerState.posY = parseFloat(e.target.value);
+            updateUserLayerTransform();
+        });
+
+
+        /* --- DRAG & DROP DU CALQUE UTILISATEUR --- */
+
+        userLayer.addEventListener('mousedown', (e) => {
+            if (e.button !== 0 || userLayerControl.style.opacity == 0 || !userToggle.checked) return;
+
+            userLayerDragging = true;
+            e.preventDefault();
+            
+            state.panning = false;
+            viewport.style.cursor = 'grabbing'; // Curseur grab quand on le tient
+
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!userLayerDragging) return;
+            
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            
+            const scaledWidth = mapContainer.offsetWidth * state.scale;
+            const scaledHeight = mapContainer.offsetHeight * state.scale;
+            
+            const dPercentX = (dx / scaledWidth) * 100;
+            const dPercentY = (dy / scaledHeight) * 100;
+            
+            userLayerState.posX += dPercentX;
+            userLayerState.posY += dPercentY;
+
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            
+            updateUserLayerTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (userLayerDragging) {
+                userLayerDragging = false;
+                viewport.style.cursor = 'grab'; // Retour au curseur de pan global
+            }
+        });
+
+
+        /* --- LOGIQUE ZOOM & PAN GLOBAL --- */
+        
         viewport.addEventListener('wheel', (e) => {
             e.preventDefault();
+            if (userLayerDragging) return;
 
             const xs = (e.clientX - state.cssX) / state.scale;
             const ys = (e.clientY - state.cssY) / state.scale;
@@ -433,7 +655,6 @@ input:checked + .slider:before { transform: translateX(18px); }
             const delta = -Math.sign(e.deltaY) * CONFIG.zoomSpeed;
             const newScale = Math.min(Math.max(CONFIG.minScale, state.scale + delta), CONFIG.maxScale);
 
-            // Ajustement de la translation pour zoomer vers la souris
             state.cssX = e.clientX - xs * newScale;
             state.cssY = e.clientY - ys * newScale;
             state.scale = newScale;
@@ -441,11 +662,10 @@ input:checked + .slider:before { transform: translateX(18px); }
             updateTransform();
         });
 
-        // 2. PAN (Drag & Drop)
         viewport.addEventListener('mousedown', (e) => {
-            // On ignore le click si c'est sur l'UI ou un marqueur (pour éviter conflits)
-            if(e.target.closest('#ui-controls')) return;
-            
+            if(e.target.closest('#ui-controls') || e.target.classList.contains('marker')) return;
+            if(userLayerDragging) return;
+
             state.panning = true;
             state.startX = e.clientX - state.cssX;
             state.startY = e.clientY - state.cssY;
@@ -454,25 +674,25 @@ input:checked + .slider:before { transform: translateX(18px); }
 
         window.addEventListener('mouseup', () => {
             state.panning = false;
-            viewport.style.cursor = 'grab';
+            if(!userLayerDragging) {
+                viewport.style.cursor = 'grab';
+            }
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!state.panning) return;
+            if (!state.panning || userLayerDragging) return;
             e.preventDefault();
             state.cssX = e.clientX - state.startX;
             state.cssY = e.clientY - state.startY;
             updateTransform();
         });
 
-        // 3. ZOOM (Boutons)
-        document.getElementById('zoom-in').addEventListener('click', () => zoomByFactor(1.2));
-        document.getElementById('zoom-out').addEventListener('click', () => zoomByFactor(0.8));
+        zoomInBtn.addEventListener('click', () => zoomByFactor(1.2));
+        zoomOutBtn.addEventListener('click', () => zoomByFactor(0.8));
 
         const zoomByFactor = (factor) => {
             const newScale = Math.min(Math.max(CONFIG.minScale, state.scale * factor), CONFIG.maxScale);
             
-            // Zoom au centre de l'écran
             const rect = viewport.getBoundingClientRect();
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
@@ -487,77 +707,153 @@ input:checked + .slider:before { transform: translateX(18px); }
             updateTransform();
         };
 
-        // Centrer la carte au démarrage
+        /* --- DEV MODE LOGIC (inchangée) --- */
+
+        devToggle.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                coordDisplay.style.display = 'block';
+                viewport.classList.add('crosshair-cursor');
+            } else {
+                coordDisplay.style.display = 'none';
+                viewport.classList.remove('crosshair-cursor');
+            }
+        });
+
+        mapContainer.addEventListener('mousemove', (e) => {
+            if (!devToggle.checked) return;
+
+            const mapWidth = mapContainer.offsetWidth; 
+            const mapHeight = mapContainer.offsetHeight;
+            
+            const rect = mapContainer.getBoundingClientRect();
+            const xRel = e.clientX - rect.left;
+            const yRel = e.clientY - rect.top;
+
+            const realX = xRel / state.scale;
+            const realY = yRel / state.scale;
+
+            const percentLeft = ((realX / mapWidth) * 100).toFixed(1);
+            const percentTop = ((realY / mapHeight) * 100).toFixed(1);
+
+            const finalL = Math.max(0, Math.min(100, percentLeft));
+            const finalT = Math.max(0, Math.min(100, percentTop));
+
+            coordDisplay.innerHTML = `TOP: <span style="color:white">${finalT}%</span> <br> LEFT: <span style="color:white">${finalL}%</span>`;
+            
+            coordDisplay.style.left = (e.clientX + 20) + 'px';
+            coordDisplay.style.top = (e.clientY + 20) + 'px';
+            coordDisplay.style.right = 'auto'; 
+        });
+
+
+        mapContainer.addEventListener('dblclick', () => {
+            if (!devToggle.checked) return;
+
+            const coordText = coordDisplay.innerHTML; 
+            
+            const topMatch = coordText.match(/TOP:.*?(\d+\.\d+)%/);
+            const leftMatch = coordText.match(/LEFT:.*?(\d+\.\d+)%/);
+            
+            if (topMatch && leftMatch) {
+                const topCoord = parseFloat(topMatch[1]).toFixed(1);
+                const leftCoord = parseFloat(leftMatch[1]).toFixed(1);
+                
+                const copyString = `{ name: "NOUVEAU", top: ${topCoord}, left: ${leftCoord}, type: "nature" }`;
+                
+                navigator.clipboard.writeText(copyString).then(() => {
+                    const originalText = coordDisplay.innerHTML;
+                    coordDisplay.innerHTML = `<span style="color:var(--wow-gold);">COPIÉ:</span> ${topCoord}%, ${leftCoord}%`;
+                    
+                    setTimeout(() => {
+                        coordDisplay.innerHTML = originalText;
+                    }, 1500);
+                    
+                }).catch(err => {
+                    console.error('Erreur de copie:', err);
+                    alert("Erreur: Impossible de copier les coordonnées.");
+                });
+            }
+        });
+
+
+        /* --- LOGIQUE FILTRES DE LOCALISATION --- */
+        const setupLocationFilters = () => {
+            const uniqueTypes = [...new Set(locations.map(loc => loc.type))];
+            const locationFiltersDiv = document.getElementById('location-filters');
+            locationFiltersDiv.innerHTML = '<label>Filtres Types</label>'; 
+            
+            uniqueTypes.forEach(type => {
+                const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+                const id = `filter-${type}`;
+                
+                const container = document.createElement('div');
+                container.className = 'legend-item';
+                
+                container.innerHTML = `
+                    <input type="checkbox" id="${id}" data-type="${type}" checked>
+                    <label for="${id}" style="color: ${colors[type] || '#ccc'}; font-size: 11px; text-transform: capitalize; letter-spacing: normal;">${typeName}</label>
+                `;
+                locationFiltersDiv.appendChild(container);
+
+                container.querySelector(`#${id}`).addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    const targetType = e.target.dataset.type;
+                    
+                    document.querySelectorAll(`.marker[data-type="${targetType}"]`).forEach(markerEl => {
+                        markerEl.style.display = isChecked ? 'block' : 'none';
+                    });
+                });
+            });
+        };
+
+
+        const createMarkers = () => {
+            locations.forEach(loc => {
+                const el = document.createElement('div');
+                el.className = `marker ${loc.type === 'well' ? 'large' : ''}`;
+                el.setAttribute('data-type', loc.type); 
+                
+                el.style.top = loc.top + '%';
+                el.style.left = loc.left + '%';
+                el.style.backgroundColor = colors[loc.type];
+                
+                const size = loc.type === 'well' ? 20 : 12;
+                if(loc.type !== 'well') {
+                    el.style.width = size + 'px';
+                    el.style.height = size + 'px';
+                }
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.innerText = loc.name;
+                el.appendChild(tooltip);
+
+                markersContainer.appendChild(el);
+            });
+        };
+
+        // Initialisation au chargement de la page
         window.onload = () => {
+            createMarkers();
+            setupLocationFilters();
+            
+            // Centrer la carte au démarrage
             const vW = viewport.offsetWidth;
             const vH = viewport.offsetHeight;
             const mapW = mapContainer.offsetWidth;
             const mapH = mapContainer.offsetHeight;
 
-            state.scale = 0.6; // Zoom initial dézoomé pour voir plus
+            state.scale = 0.6;
             state.cssX = (vW - mapW * state.scale) / 2;
             state.cssY = (vH - mapH * state.scale) / 2;
             
+            // Initialisation de l'état du calque utilisateur (caché par défaut)
+            userToggle.checked = false;
+            userLayerControl.style.opacity = 0;
+            
             updateTransform();
+            updateUserLayerTransform(); 
         };
-/* --- DEV MODE LOGIC --- */
-const devToggle = document.getElementById('dev-toggle');
-const coordDisplay = document.getElementById('coord-display');
-
-// 1. Activation / Désactivation
-devToggle.addEventListener('change', (e) => {
-    if(e.target.checked) {
-        coordDisplay.style.display = 'block';
-        viewport.classList.add('crosshair-cursor');
-        // On désactive temporairement le drag & drop map pour faciliter le pointage
-        // (Optionnel, retirez cette ligne si vous voulez bouger la map en mode dev)
-        // state.panning = false; 
-    } else {
-        coordDisplay.style.display = 'none';
-        viewport.classList.remove('crosshair-cursor');
-    }
-});
-
-// 2. Calcul des coordonnées
-mapContainer.addEventListener('mousemove', (e) => {
-    if (!devToggle.checked) return;
-
-    // Récupération des dimensions de la carte non transformée (CSS width/height)
-    const mapWidth = mapContainer.offsetWidth; 
-    const mapHeight = mapContainer.offsetHeight;
-
-    // e.offsetX donne la position X relative à l'élément cible (mapContainer)
-    // C'est génial car cela ignore automatiquement les translations CSS (drag)
-    // Par contre, il faut gérer le scale si le navigateur le prend en compte dans offsetX (dépend des navigateurs)
-    // Méthode la plus robuste : utiliser getBoundingClientRect
-    
-    const rect = mapContainer.getBoundingClientRect();
-    
-    // Position de la souris relative au coin haut-gauche de la map (incluant le zoom)
-    const xRel = e.clientX - rect.left;
-    const yRel = e.clientY - rect.top;
-
-    // On normalise pour obtenir le % (on divise par le facteur d'échelle actuel)
-    // xRel / scale = position réelle en pixels sur l'image originale
-    const realX = xRel / state.scale;
-    const realY = yRel / state.scale;
-
-    // Conversion en pourcentage
-    const percentLeft = ((realX / mapWidth) * 100).toFixed(1); // 1 décimale de précision
-    const percentTop = ((realY / mapHeight) * 100).toFixed(1);
-
-    // Affichage : On borne entre 0 et 100 pour éviter les bugs de bordure
-    const finalL = Math.max(0, Math.min(100, percentLeft));
-    const finalT = Math.max(0, Math.min(100, percentTop));
-
-    coordDisplay.innerHTML = `TOP: <span style="color:white">${finalT}%</span> <br> LEFT: <span style="color:white">${finalL}%</span>`;
-    
-    // Petit bonus : on déplace le tooltip près de la souris pour lecture facile
-    coordDisplay.style.left = (e.clientX + 20) + 'px';
-    coordDisplay.style.top = (e.clientY + 20) + 'px';
-    // Reset des positions fixes pour utiliser left/top dynamiques
-    coordDisplay.style.right = 'auto'; 
-});
     </script>
 </body>
 </html>
